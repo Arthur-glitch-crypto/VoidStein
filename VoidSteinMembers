@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* (Estilos do seu cÃ³digo CSS) */
+        #points-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #user-code-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <p>FaÃ§a o PIX de R$20,00 clicando no link PIX e envie o comprovante de pagamento para o nÃºmero +55 (48) 98433-0340.</p>
+
+    <div id="unlock">
+        <button onclick="allowUnlockForPINWHEEL()" disabled>Desbloquear Links</button>
+    </div>
+
+    <div id="payment-message">
+        Ao enviar o comprovante, vocÃª terÃ¡ acesso ao BÃ´nus sem necessitar de uma senha, da prÃ³xima vez que entrar e pedir seu cÃ³digo.
+    </div>
+
+    <button onclick="requestPINWHEELCode()">Pedir CÃ³digo Exclusivo</button>
+
+    <ul class="circle-menu">
+        <li>
+            <a href="https://nubank.com.br/cobrar/tezyu/65a41ae1-659d-4dab-84f3-8dd2bed26604">
+                PIX
+            </a>
+        </li>
+        <li>
+            <a href="https://steinshop.com.br/">
+                Loja
+            </a>
+        </li>
+        <li>
+            <a href="https://youtube.com/@void33.?feature=shared">
+                Canal
+            </a>
+        </li>
+        <li class="locked" id="link4"><a href="#" onclick="indicatePINWHEEL()">BÃ´nus de indicaÃ§Ã£o</a></li>
+        <li class="locked">coloque o cÃ³digo do seu amigo acima</li>
+    </ul>
+
+    <div id="user-code-section">
+        <h3>Seu PINWHEEL:</h3>
+        <p id="user-code">Ainda nÃ£o obtido</p>
+        <p id="user-reserve-code"></p>
+    </div>
+
+    <div id="points-section">
+        <h3>Sua pontuaÃ§Ã£o:</h3>
+        <p id="user-points">0 ponto(s)</p>
+    </div>
+
+    <script>
+        // Recupera o PINWHEEL do usuÃ¡rio do armazenamento local
+        var userCode = localStorage.getItem("PINWHEEL");
+
+        if (!userCode) {
+            // Se nÃ£o houver um PINWHEEL no armazenamento local, gera um novo PINWHEEL
+            userCode = generateRandomCode(15);
+            // Armazena o PINWHEEL gerado no armazenamento local
+            localStorage.setItem("PINWHEEL", userCode);
+        }
+
+        var allowedPINWHEELs = ["423392730642782", "724925675398178", "930572324433641"]; // Adicione aqui os PINWHEELs permitidos
+        var isUnlocked = false;
+        var userPoints = 0;
+        var userReserveCode = null;
+        var userEmail = null;
+        var userIndicationCode = null;
+        var lastIndicationTimestamp = null;
+
+        var friendCodes = {
+            "codigo_amigo_1": 1,
+            "codigo_amigo_2": 1,
+            "104775966952803": 1,
+            "839387359898184": 1,
+        };
+
+        function allowUnlockForPINWHEEL() {
+            var enteredPINWHEEL = prompt("Insira o PINWHEEL para desbloquear os links:");
+
+            if (allowedPINWHEELs.includes(enteredPINWHEEL)) {
+                var lockedLinks = document.querySelectorAll('.circle-menu li:nth-child(n+4)');
+                lockedLinks.forEach(link => {
+                    link.style.display = 'block';
+                });
+
+                document.getElementById("unlock").style.display = 'none';
+                isUnlocked = true;
+                updateUserCode();
+            } else {
+                alert("PINWHEEL nÃ£o autorizado. Tente novamente.");
+            }
+        }
+
+        function requestPINWHEELCode() {
+            document.getElementById("user-code").textContent = userCode;
+        }
+
+        function indicatePINWHEEL() {
+            if (isUnlocked && userIndicationCode === null) {
+                var currentTime = new Date().getTime();
+                if (lastIndicationTimestamp === null || (currentTime - lastIndicationTimestamp) >= 86400000) {
+                    var indicationCode = prompt("Insira o cÃ³digo de indicaÃ§Ã£o de 15 dÃ­gitos:");
+
+                    if (indicationCode && indicationCode.length === 15 && indicationCode !== userCode) {
+                        userIndicationCode = indicationCode;
+                        userPoints += friendCodes[indicationCode] || 0;
+                        updateUserPoints();
+                        document.getElementById("link4").innerHTML = "BÃ´nus por IndicaÃ§Ã£o (CÃ³digo inserido)";
+                        document.getElementById("link4").onclick = function() {
+                            alert("VocÃª jÃ¡ inseriu o cÃ³digo de indicaÃ§Ã£o.");
+                        };
+                        lastIndicationTimestamp = currentTime;
+                    } else {
+                        alert("CÃ³digo de indicaÃ§Ã£o invÃ¡lido ou jÃ¡ inserido.");
+                    }
+                } else {
+                    alert("Espere 24 horas apÃ³s a Ãºltima inserÃ§Ã£o para colocar outro cÃ³digo de indicaÃ§Ã£o.");
+                }
+            } else {
+                alert("Desbloqueie os links antes de inserir o cÃ³digo de indicaÃ§Ã£o ou vocÃª jÃ¡ inseriu o cÃ³digo.");
+            }
+        }
+
+        function updateUserPoints() {
+            document.getElementById("user-points").textContent = userPoints + " ponto(s)";
+        }
+
+        function generateRandomCode(length) {
+            var result = '';
+            var characters = '0123456789';
+            for (var i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+    </script>
+</body>
+</html>
